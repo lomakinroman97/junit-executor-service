@@ -35,11 +35,7 @@ class YandexGPTService(private val config: Config) {
             }
 
             val requestBody = buildJsonObject {
-                put("modelUri", "gpt://${config.getString("yandex-gpt.folder")}/yandexgpt-lite")
-                put("completionOptions", buildJsonObject {
-                    put("temperature", 0.1)
-                    put("maxTokens", 2000)
-                })
+                put("modelUri", "gpt://b1gp9fidpabmov8j1rid/yandexgpt-lite")
                 put("messages", buildJsonArray {
                     addJsonObject {
                         put("role", "user")
@@ -50,22 +46,43 @@ class YandexGPTService(private val config: Config) {
 
             try {
                 logger.info("Sending request to Yandex GPT for test generation")
+                logger.info("API URL: ${config.getString("yandex-gpt.url")}")
+                logger.info("Folder ID: ${config.getString("yandex-gpt.folder")}")
+                logger.info("Request body: $requestBody")
                 
                 val response = client.post(config.getString("yandex-gpt.url")) {
                     header("Authorization", "Api-Key ${config.getString("yandex-gpt.api-key")}")
+                    header("x-folder-id", config.getString("yandex-gpt.folder"))
                     header("Content-Type", "application/json")
                     setBody(requestBody)
                 }
 
+                logger.info("Response status: ${response.status}")
+                
                 if (response.status.isSuccess()) {
                     val responseBody = response.body<JsonObject>()
-                    val choices = responseBody["result"]?.jsonObject?.get("alternatives")?.jsonArray
+                    logger.info("Response body: $responseBody")
                     
-                    if (choices != null && choices.isNotEmpty()) {
-                        val generatedCode = choices[0].jsonObject["message"]?.jsonObject?.get("text")?.jsonPrimitive?.content
-                        if (generatedCode != null && generatedCode.isNotBlank()) {
-                            logger.info("Successfully generated tests from Yandex GPT")
-                            return@runBlocking generatedCode.trim()
+                    // Используем правильную структуру ответа на основе рабочего примера
+                    val result = responseBody["result"]?.jsonObject
+                    if (result != null) {
+                        val alternatives = result["alternatives"]?.jsonArray
+                        if (alternatives != null && alternatives.isNotEmpty()) {
+                            val alternative = alternatives[0].jsonObject
+                            val message = alternative["message"]?.jsonObject
+                            if (message != null) {
+                                val generatedCode = message["text"]?.jsonPrimitive?.content
+                                if (generatedCode != null && generatedCode.isNotBlank()) {
+                                    logger.info("Successfully generated tests from Yandex GPT")
+                                    // Убираем markdown разметку если она есть
+                                    val cleanCode = generatedCode.trim()
+                                        .removePrefix("```")
+                                        .removePrefix("kotlin")
+                                        .removeSuffix("```")
+                                        .trim()
+                                    return@runBlocking cleanCode
+                                }
+                            }
                         }
                     }
                     

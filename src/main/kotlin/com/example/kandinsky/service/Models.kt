@@ -20,7 +20,7 @@ data class ExecuteResponse(
 @Serializable
 data class TestResult(
     val testName: String,
-    val status: String, // "PASSED" or "FAILED"
+    val status: String, // "PASSED", "FAILED", "SKIPPED", or "WARNING"
     val assertions: List<String>,
     val errorMessage: String? = null
 )

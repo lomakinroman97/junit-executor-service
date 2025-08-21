@@ -15,6 +15,7 @@ dependencies {
     // Kotlin
     implementation("org.jetbrains.kotlin:kotlin-stdlib")
     implementation("org.jetbrains.kotlin:kotlin-reflect")
+    implementation("org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.24")
     
     // JSON Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
@@ -35,6 +36,10 @@ dependencies {
     implementation("org.junit.jupiter:junit-jupiter:5.10.0")
     implementation("org.junit.jupiter:junit-jupiter-api:5.10.0")
     implementation("org.junit.jupiter:junit-jupiter-engine:5.10.0")
+    
+    // JUnit Platform Launcher for programmatic test execution
+    implementation("org.junit.platform:junit-platform-launcher:1.10.0")
+    implementation("org.junit.platform:junit-platform-engine:1.10.0")
     
     // Logging
     implementation("org.slf4j:slf4j-api:2.0.9")
