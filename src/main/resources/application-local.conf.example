@@ -1,0 +1,35 @@
+# Пример локальной конфигурации
+# Скопируйте этот файл в application-local.conf и заполните реальными значениями
+
+server {
+  port = 8080
+  host = "0.0.0.0"
+}
+
+yandex-gpt {
+  api-key = "YOUR_YANDEX_GPT_API_KEY_HERE"
+  folder = "YOUR_YANDEX_GPT_FOLDER_ID_HERE"
+  url = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion"
+  timeout-seconds = 30
+}
+
+execution {
+  timeout-seconds = 60
+  max-code-length = 10000
+}
+
+security {
+  blacklisted-patterns = [
+    "System.exit",
+    "Runtime.exec",
+    "ProcessBuilder",
+    "ProcessImpl",
+    "SecurityManager",
+    "System.setSecurityManager",
+    "System.setProperty",
+    "System.getenv",
+    "File.delete",
+    "File.renameTo",
+    "File.createNewFile"
+  ]
+}
