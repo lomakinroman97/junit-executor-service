@@ -13,8 +13,18 @@ data class ExecuteResponse(
     val testResults: List<TestResult>? = null,
     val originalCode: String? = null,
     val generatedTestCode: String? = null,
+    val codeExecutionResult: CodeExecutionResult? = null,
     val error: String? = null,
     val details: String? = null
+)
+
+@Serializable
+data class CodeExecutionResult(
+    val success: Boolean,
+    val output: String? = null,
+    val error: String? = null,
+    val details: String? = null,
+    val executionTime: Long? = null
 )
 
 @Serializable

@@ -27,9 +27,11 @@ class YandexGPTService(private val config: Config) {
     fun generateTests(kotlinCode: String): String {
         return runBlocking {
             val prompt = buildString {
-                append("You are a senior Kotlin developer. Generate a JUnit 5 test class for the following code. ")
+                append("You are a senior Kotlin developer. Generate a JUnit 4 test class for the following code. ")
                 append("Return ONLY the Kotlin code without any markdown formatting, explanations, or additional text. ")
-                append("The test class must be named 'GeneratedTests' and use org.junit.jupiter.api.Assertions for assertions. ")
+                append("The test class must be named 'GeneratedTests' and use JUnit 4 annotations (@Test from org.junit.Test, not Jupiter). ")
+                append("Use org.junit.Assert for assertions (assertEquals, assertTrue, etc.). ")
+                append("The code under test will be in the same file, so call functions directly (for example add(1, 2)). ")
                 append("Use Kotlin syntax (fun instead of public static, etc.). Here is the code to test: ")
                 append(kotlinCode)
             }

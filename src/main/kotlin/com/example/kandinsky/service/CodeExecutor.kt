@@ -12,6 +12,7 @@ class CodeExecutor {
     private val securityService = SecurityService(config)
     private val yandexGPTService = YandexGPTService(config)
     private val testExecutionService = TestExecutionService()
+    private val safeCodeExecutor = SafeCodeExecutor()
 
     fun execute(kotlinCode: String): ExecuteResponse {
         return try {
@@ -58,6 +59,7 @@ class CodeExecutor {
             // Cleanup resources
             try {
                 testExecutionService.cleanup()
+                safeCodeExecutor.shutdown()
                 yandexGPTService.close()
             } catch (e: Exception) {
                 logger.warn("Error during cleanup", e)
@@ -100,7 +102,11 @@ class CodeExecutor {
         }
         logger.info("Tests generated successfully, length: ${generatedTestCode.length}")
 
-        // Step 3: Execute tests
+        // Step 3: Execute the original code safely
+        logger.info("Executing original code safely")
+        val codeExecutionResult = safeCodeExecutor.executeCodeSafely(kotlinCode)
+        
+        // Step 4: Execute tests
         logger.info("Executing generated tests")
         val testExecutionResult = testExecutionService.executeTests(kotlinCode, generatedTestCode)
         
@@ -112,13 +118,14 @@ class CodeExecutor {
             )
         }
 
-        // Step 4: Return results
+        // Step 5: Return results
         logger.info("Test execution completed successfully")
         return ExecuteResponse(
             success = true,
             testResults = testExecutionResult.testResults,
             originalCode = kotlinCode,
-            generatedTestCode = generatedTestCode
+            generatedTestCode = generatedTestCode,
+            codeExecutionResult = codeExecutionResult
         )
     }
 }
