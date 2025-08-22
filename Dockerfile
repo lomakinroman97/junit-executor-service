@@ -1,45 +1,33 @@
-FROM openjdk:19-jdk-slim
+# Используем локальный образ с Java
+FROM github-mcp-service:latest
 
-# Set working directory
+# Устанавливаем рабочую директорию
 WORKDIR /app
 
-# Copy gradle files
-COPY gradlew .
-COPY gradle/ gradle/
-COPY build.gradle.kts .
-COPY settings.gradle.kts .
+# Попробуем установить Kotlin compiler с правами root
+USER root
+RUN apt-get update && apt-get install -y curl unzip && \
+    curl -L -o kotlin-compiler.zip https://github.com/JetBrains/kotlin/releases/download/v1.9.24/kotlin-compiler-1.9.24.zip && \
+    unzip kotlin-compiler.zip && \
+    mv kotlinc /usr/local/ && \
+    chmod +x /usr/local/kotlinc/bin/kotlinc && \
+    rm kotlin-compiler.zip && \
+    apt-get remove -y curl unzip && \
+    apt-get autoremove -y && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
-# Make gradlew executable
-RUN chmod +x ./gradlew
+# Копируем собранный JAR файл
+COPY build/libs/junit-executor-server-1.0.0.jar app.jar
 
-# Download dependencies
-RUN ./gradlew dependencies --no-daemon
+# Создаем директорию для зависимостей
+RUN mkdir -p /app/deps
 
-# Copy source code
-COPY src/ src/
+# Копируем JUnit и Hamcrest JAR файлы
+COPY build/dependencies/ /app/deps/
 
-# Build the application
-RUN ./gradlew build --no-daemon
-
-# Create runtime directory
-RUN mkdir -p /app/runtime
-
-# Set security manager properties
-ENV JAVA_OPTS="-Djava.security.manager=allow -Djava.security.policy=/app/security.policy"
-
-# Create security policy file
-RUN echo "grant {" > /app/security.policy && \
-    echo "  permission java.lang.RuntimePermission \"setSecurityManager\";" >> /app/security.policy && \
-    echo "  permission java.lang.RuntimePermission \"createSecurityManager\";" >> /app/security.policy && \
-    echo "  permission java.lang.RuntimePermission \"setIO\";" >> /app/security.policy && \
-    echo "  permission java.io.FilePermission \"/tmp/*\", \"read,write,delete\";" >> /app/security.policy && \
-    echo "  permission java.io.FilePermission \"/app/runtime/*\", \"read,write,delete\";" >> /app/security.policy && \
-    echo "  permission java.lang.reflect.ReflectPermission \"suppressAccessChecks\";" >> /app/security.policy && \
-    echo "  permission java.util.PropertyPermission \"*\", \"read\";" >> /app/security.policy && \
-    echo "};" >> /app/security.policy
-
-# Expose port
+# Открываем порт
 EXPOSE 8080
 
-# Run the application
-CMD ["java", "-jar", "build/libs/junit-executor-server-1.0.0.jar"]
+# Запускаем приложение
+CMD ["java", "-jar", "app.jar"]

@@ -147,7 +147,12 @@ class TestExecutionService {
     private fun findKotlincCommand(): String? {
         return try {
             // Try different possible locations for kotlinc
-            val possibleCommands = listOf("kotlinc", "/usr/local/bin/kotlinc", "kotlin-compiler/bin/kotlinc")
+            val possibleCommands = listOf(
+                "kotlinc", 
+                "/usr/local/bin/kotlinc", 
+                "/usr/local/kotlinc/bin/kotlinc",
+                "kotlin-compiler/bin/kotlinc"
+            )
             
             for (command in possibleCommands) {
                 val process = ProcessBuilder("which", command).start()
@@ -270,6 +275,20 @@ class TestExecutionService {
     
     private fun findJUnitJar(): String? {
         return try {
+            // First, try to find in Docker dependencies directory
+            val dockerDepsDir = File("/app/deps")
+            if (dockerDepsDir.exists()) {
+                val jarFile = dockerDepsDir.listFiles()?.find { 
+                    it.name.contains("junit") && it.name.endsWith(".jar") && 
+                    !it.name.contains("jupiter") && !it.name.contains("platform") && 
+                    it.name.contains("junit-4.13.2")
+                }
+                if (jarFile != null) {
+                    logger.info("Found JUnit jar in Docker deps: ${jarFile.absolutePath}")
+                    return jarFile.absolutePath
+                }
+            }
+            
             // Try to find JUnit 4 jar in gradle cache
             val gradleCache = System.getProperty("user.home") + "/.gradle/caches"
             val junitPattern = "junit/junit/4.13.2"
@@ -310,12 +329,23 @@ class TestExecutionService {
     
     private fun findHamcrestJar(): String? {
         return try {
+            // First, try to find in Docker dependencies directory
+            val dockerDepsDir = File("/app/deps")
+            if (dockerDepsDir.exists()) {
+                val jarFile = dockerDepsDir.listFiles()?.find { 
+                    it.name.contains("hamcrest") && it.name.endsWith(".jar")
+                }
+                if (jarFile != null) {
+                    logger.info("Found hamcrest jar in Docker deps: ${jarFile.absolutePath}")
+                    return jarFile.absolutePath
+                }
+            }
+            
             // Try to find hamcrest jar in gradle cache
             val gradleCache = System.getProperty("user.home") + "/.gradle/caches"
             val hamcrestPattern = "org.hamcrest/hamcrest-core/1.3"
             
             val possiblePaths = listOf(
-                "$gradleCache/modules-2/files-2.1/$hamcrestPattern",
                 "$gradleCache/modules-2/files-2.1/$hamcrestPattern"
             )
             

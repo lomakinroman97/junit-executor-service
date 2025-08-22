@@ -76,7 +76,11 @@ tasks.withType<Test> {
     failOnNoDiscoveredTests = false
 }
 
-tasks.withType<Jar> {
+tasks.named<Jar>("jar") {
+    archiveBaseName.set("junit-executor-server")
+    archiveClassifier.set("")
+    archiveVersion.set("1.0.0")
+    
     manifest {
         attributes["Main-Class"] = "com.example.junit.service.MainKt"
     }
@@ -84,4 +88,10 @@ tasks.withType<Jar> {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     
     from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
+}
+
+// Задача для копирования зависимостей
+task("copyDependencies", Copy::class) {
+    from(configurations.runtimeClasspath)
+    into("build/dependencies")
 }
