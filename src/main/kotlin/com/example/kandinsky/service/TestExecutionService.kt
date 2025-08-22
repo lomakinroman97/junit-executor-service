@@ -239,7 +239,7 @@ class TestExecutionService {
 
     private fun processJUnitResult(result: Result, testResults: MutableList<TestResult>) {
         // Add summary information
-        testResults.add(TestResult(
+            testResults.add(TestResult(
             testName = "Test Summary",
             status = if (result.wasSuccessful()) "PASSED" else "FAILED",
             assertions = listOf(
